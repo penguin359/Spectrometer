@@ -29,7 +29,7 @@ class Spectrometer {
 	void begin() {
 		/* XXX Hardware specific */
 		AFMS.begin();
-		myMotor->setSpeed(10); // 10 rpm
+		myMotor->setSpeed(150); // 10 rpm
 	}
 
 	long getRealWavelength() {
@@ -48,11 +48,48 @@ class Spectrometer {
 		long newWavelengthInSteps = wavelength*stepToRealRatio;
 		long diffWavelengthInSteps = currentWavelengthInSteps -
 					     newWavelengthInSteps;
+		int dir;
+		long i;
+		bool lowLimitHit = false;
+		bool highLimitHit = false;
 
-		if(diffWavelengthInSteps > 0) {
-			myMotor->step(diffWavelengthInSteps, FORWARD, SINGLE);
+		//Serial.println("moveTo()");
+		if(diffWavelengthInSteps < 0) {
+			//myMotor->step(diffWavelengthInSteps, FORWARD, SINGLE);
+			dir = FORWARD;
+			diffWavelengthInSteps = -diffWavelengthInSteps;
 		} else {
-			myMotor->step(-diffWavelengthInSteps, BACKWARD, SINGLE);
+			//myMotor->step(-diffWavelengthInSteps, BACKWARD, SINGLE);
+			dir = BACKWARD;
+		}
+
+		//Serial.println("steps");
+		for(i = 0; i < diffWavelengthInSteps; i++) {
+			//Serial.println(" step");
+			if(digitalRead(LOW_LIMIT_SWITCH_PIN)) {
+				if(!lowLimitHit)
+					Serial.println(F("Low Limit Hit"));
+				lowLimitHit = true;
+			} else if(lowLimitHit) {
+				Serial.println(F("Low Limit Released"));
+				lowLimitHit = false;
+			}
+
+			if(digitalRead(HIGH_LIMIT_SWITCH_PIN)) {
+				if(!highLimitHit)
+					Serial.println(F("High Limit Hit"));
+				highLimitHit = true;
+			} else if(highLimitHit) {
+				Serial.println(F("High Limit Released"));
+				highLimitHit = false;
+			}
+
+#if 1
+			if((dir == BACKWARD && lowLimitHit) || (dir == FORWARD && highLimitHit))
+				break;
+#endif
+
+			myMotor->step(1, dir, SINGLE);
 		}
 
 		currentWavelengthInSteps = newWavelengthInSteps;
@@ -136,7 +173,6 @@ void getCmd()
 	static int cmd = -1;
 	long wavelength;
 
-	//Serial.println("getCmd()");
 	if(cmd >= 0 || !init) {
 		init = 1;
 		Serial.println();
@@ -152,7 +188,6 @@ void getCmd()
 		Serial.println("Down one wavelength");
 		Serial.println();
 	}
-
 	cmd = Serial.read();
 
 	switch(cmd) {
@@ -212,7 +247,7 @@ void loop()
 	int cmd;
 	int i;
 
-#if 1
+#if 0
 	if(digitalRead(LOW_LIMIT_SWITCH_PIN)) {
 		if(!lowLimitHit)
 			Serial.println(F("Low Limit Hit"));
@@ -236,7 +271,7 @@ void loop()
 #endif
 
 	//cmd = Serial.read();
-	myMotor->step(10, FORWARD, SINGLE);
+	//myMotor->step(10, FORWARD, SINGLE);
 	getCmd();
 
 #if 0
