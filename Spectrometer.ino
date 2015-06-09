@@ -20,8 +20,8 @@ class Spectrometer {
 	 */
 	//const long stepToDisplayedRatio = 2;	/* Wavelength shown on meter */
 	//const long stepToRealRatio = 3;		/* Actual light wavelength */
-	const long stepToDisplayedRatio = 1;	/* Wavelength shown on meter */
-	const long stepToRealRatio = 1;		/* Actual light wavelength */
+	const long stepToDisplayedRatio = 52;	/* Wavelength shown on meter */
+	const long stepToRealRatio = 52;		/* Actual light wavelength */
 
 	long currentWavelengthInSteps = 0;
 
@@ -32,8 +32,16 @@ class Spectrometer {
 		myMotor->setSpeed(150); // 10 rpm
 	}
 
+	long getStepToRealRatio() {
+		return stepToRealRatio;
+	}
+
 	long getRealWavelength() {
 		return currentWavelengthInSteps/stepToRealRatio;
+	}
+
+	long getRealWavelengthFrac() {
+		return currentWavelengthInSteps%stepToRealRatio;
 	}
 
 	long getDisplayedWavelength() {
@@ -178,14 +186,18 @@ void getCmd()
 		Serial.println();
 		Serial.println();
 		Serial.print("Current wavelength: ");
-		Serial.println(spectrometer.getRealWavelength());
-		Serial.print("Displayed wavelength: ");
-		Serial.println(spectrometer.getDisplayedWavelength());
+		Serial.print(spectrometer.getRealWavelength());
+		Serial.print(" + ");
+		Serial.print(spectrometer.getRealWavelengthFrac());
+		Serial.print("/");
+		Serial.println(spectrometer.getStepToRealRatio());
+		//Serial.print("Displayed wavelength: ");
+		//Serial.println(spectrometer.getDisplayedWavelength());
 		Serial.println();
 		Serial.println("Set displayed wavelength");
 		Serial.println("Go to wavelength");
-		Serial.println("Up one wavelength");
-		Serial.println("Down one wavelength");
+		Serial.println("Up one step");
+		Serial.println("Down one step");
 		Serial.println();
 	}
 	cmd = Serial.read();
@@ -195,6 +207,7 @@ void getCmd()
 		case 'S':
 			Serial.print("Wavelength: ");
 			wavelength = Serial.parseInt();
+			Serial.println(wavelength);
 			spectrometer.setDisplayedWavelength(wavelength);
 			break;
 
@@ -202,6 +215,7 @@ void getCmd()
 		case 'G':
 			Serial.print("Wavelength: ");
 			wavelength = Serial.parseInt();
+			Serial.println(wavelength);
 			spectrometer.moveTo(wavelength);
 			break;
 
