@@ -1,6 +1,9 @@
 #include <Wire.h>
 #include <Adafruit_MotorShield.h>
 
+#include "Spectrometer.h"
+
+
 #define	LOW_LIMIT_SWITCH_PIN	2
 #define HIGH_LIMIT_SWITCH_PIN	3
 #define STEP_PIN		4
@@ -10,107 +13,6 @@
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 Adafruit_StepperMotor *myMotor = AFMS.getStepper(200, 1);
 
-class Spectrometer {
-	/* The wavelength displayed on the Spectrometer has
-	 * about a 1.5 ratio to the actual wavelength selected.
-	 * These constants are the ratio of displayed or real
-	 * wavelength to the number of steps to drive the stepper
-	 * motor moving the mirrors. Specifically, it's the number
-	 * of steps needed to move one wavelength.
-	 */
-	//const long stepToDisplayedRatio = 2;	/* Wavelength shown on meter */
-	//const long stepToRealRatio = 3;		/* Actual light wavelength */
-	const long stepToDisplayedRatio = 52;	/* Wavelength shown on meter */
-	const long stepToRealRatio = 52;		/* Actual light wavelength */
-
-	long currentWavelengthInSteps = 0;
-
-    public:
-	void begin() {
-		/* XXX Hardware specific */
-		AFMS.begin();
-		myMotor->setSpeed(150); // 10 rpm
-	}
-
-	long getStepToRealRatio() {
-		return stepToRealRatio;
-	}
-
-	long getRealWavelength() {
-		return currentWavelengthInSteps/stepToRealRatio;
-	}
-
-	long getRealWavelengthFrac() {
-		return currentWavelengthInSteps%stepToRealRatio;
-	}
-
-	long getDisplayedWavelength() {
-		return currentWavelengthInSteps/stepToDisplayedRatio;
-	}
-
-	void setDisplayedWavelength(long wavelength) {
-		currentWavelengthInSteps = wavelength*stepToDisplayedRatio;
-	}
-
-	void moveTo(long wavelength) {
-		long newWavelengthInSteps = wavelength*stepToRealRatio;
-		long diffWavelengthInSteps = currentWavelengthInSteps -
-					     newWavelengthInSteps;
-		int dir;
-		long i;
-		bool lowLimitHit = false;
-		bool highLimitHit = false;
-
-		//Serial.println("moveTo()");
-		if(diffWavelengthInSteps < 0) {
-			//myMotor->step(diffWavelengthInSteps, FORWARD, SINGLE);
-			dir = FORWARD;
-			diffWavelengthInSteps = -diffWavelengthInSteps;
-		} else {
-			//myMotor->step(-diffWavelengthInSteps, BACKWARD, SINGLE);
-			dir = BACKWARD;
-		}
-
-		//Serial.println("steps");
-		for(i = 0; i < diffWavelengthInSteps; i++) {
-			//Serial.println(" step");
-			if(digitalRead(LOW_LIMIT_SWITCH_PIN)) {
-				if(!lowLimitHit)
-					Serial.println(F("Low Limit Hit"));
-				lowLimitHit = true;
-			} else if(lowLimitHit) {
-				Serial.println(F("Low Limit Released"));
-				lowLimitHit = false;
-			}
-
-			if(digitalRead(HIGH_LIMIT_SWITCH_PIN)) {
-				if(!highLimitHit)
-					Serial.println(F("High Limit Hit"));
-				highLimitHit = true;
-			} else if(highLimitHit) {
-				Serial.println(F("High Limit Released"));
-				highLimitHit = false;
-			}
-
-#if 1
-			if((dir == BACKWARD && lowLimitHit) || (dir == FORWARD && highLimitHit))
-				break;
-#endif
-
-			myMotor->step(1, dir, SINGLE);
-		}
-
-		currentWavelengthInSteps = newWavelengthInSteps;
-	}
-
-	void up() {
-		moveTo(currentWavelengthInSteps + 1);
-	}
-
-	void down() {
-		moveTo(currentWavelengthInSteps - 1);
-	}
-};
 
 class DummySpectrometer {
 	/* The wavelength displayed on the Spectrometer has
@@ -246,6 +148,7 @@ void setup()
 	pinMode(STEP_PIN, OUTPUT);
 	pinMode(DIRECTION_PIN, OUTPUT);
 
+	AFMS.begin();
 	spectrometer.begin();
 
 	Serial.println("Start-up complete.");
