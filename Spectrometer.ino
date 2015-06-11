@@ -82,8 +82,8 @@ class DummySpectrometer {
 };
 
 
-//Spectrometer spectrometer;
-DummySpectrometer spectrometer;
+Spectrometer spectrometer(myMotor);
+//DummySpectrometer spectrometer;
 
 void getCmd()
 {
