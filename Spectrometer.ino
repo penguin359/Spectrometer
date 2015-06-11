@@ -34,8 +34,16 @@ class DummySpectrometer {
 		/* XXX Hardware specific */
 	}
 
+	long getStepToRealRatio() {
+		return stepToRealRatio;
+	}
+
 	long getRealWavelength() {
 		return currentWavelengthInSteps/stepToRealRatio;
+	}
+
+	long getRealWavelengthFrac() {
+		return currentWavelengthInSteps%stepToRealRatio;
 	}
 
 	long getDisplayedWavelength() {
@@ -74,8 +82,8 @@ class DummySpectrometer {
 };
 
 
-Spectrometer spectrometer;
-//DummySpectrometer spectrometer;
+//Spectrometer spectrometer;
+DummySpectrometer spectrometer;
 
 void getCmd()
 {
