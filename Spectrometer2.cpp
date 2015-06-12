@@ -54,14 +54,13 @@ void Spectrometer::moveTo(long wavelength)
 	bool lowLimitHit = false;
 	bool highLimitHit = false;
 
-	//Serial.println("moveTo()");
-	if(diffWavelengthInSteps < 0) {
+	if(diffWavelengthInSteps > 0) {
 		//myMotor->step(diffWavelengthInSteps, FORWARD, SINGLE);
 		dir = FORWARD;
-		diffWavelengthInSteps = -diffWavelengthInSteps;
 	} else {
 		//myMotor->step(-diffWavelengthInSteps, BACKWARD, SINGLE);
 		dir = BACKWARD;
+		diffWavelengthInSteps = -diffWavelengthInSteps;
 	}
 
 	for(i = 0; i < diffWavelengthInSteps; i++) {

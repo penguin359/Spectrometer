@@ -15,8 +15,8 @@ class Spectrometer {
 	 */
 	//const long stepToDisplayedRatio = 2;	/* Wavelength shown on meter */
 	//const long stepToRealRatio = 3;		/* Actual light wavelength */
-	static const long stepToDisplayedRatio = 52;	/* Wavelength shown on meter */
-	static const long stepToRealRatio = 52;		/* Actual light wavelength */
+	static const long stepToDisplayedRatio = 1;	/* Wavelength shown on meter */
+	static const long stepToRealRatio = 1;		/* Actual light wavelength */
 
 	long currentWavelengthInSteps;
 
