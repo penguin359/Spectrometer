@@ -1,7 +1,7 @@
-#define	LOW_LIMIT_SWITCH_PIN	4
-#define HIGH_LIMIT_SWITCH_PIN	5
-#define STEP_PIN		3
-#define DIRECTION_PIN		2
+#define	LOW_LIMIT_SWITCH_PIN	2
+#define HIGH_LIMIT_SWITCH_PIN	3
+#define STEP_PIN		4
+#define DIRECTION_PIN		5
 
 
 void setup()
