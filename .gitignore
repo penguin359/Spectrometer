@@ -1,1 +1,4 @@
+*.o
 *.swp
+/test/spec
+/test/test
