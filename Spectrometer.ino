@@ -10,8 +10,8 @@
 #define DIRECTION_PIN		5
 
 
-Adafruit_MotorShield AFMS = Adafruit_MotorShield();
-Adafruit_StepperMotor *myMotor = AFMS.getStepper(200, 1);
+//Adafruit_MotorShield AFMS = Adafruit_MotorShield();
+//Adafruit_StepperMotor *myMotor = AFMS.getStepper(200, 1);
 
 
 class DummySpectrometer {
@@ -82,7 +82,8 @@ class DummySpectrometer {
 };
 
 
-Spectrometer spectrometer(myMotor);
+//Spectrometer spectrometer(myMotor);
+Spectrometer spectrometer(NULL);
 //DummySpectrometer spectrometer;
 
 void getCmd()
@@ -156,7 +157,7 @@ void setup()
 	pinMode(STEP_PIN, OUTPUT);
 	pinMode(DIRECTION_PIN, OUTPUT);
 
-	AFMS.begin();
+	//AFMS.begin();
 	spectrometer.begin();
 
 	Serial.println("Start-up complete.");

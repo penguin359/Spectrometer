@@ -16,7 +16,7 @@ void Spectrometer::begin()
 {
 	/* XXX Hardware specific */
 	//AFMS.begin();
-	myMotor->setSpeed(150); // 10 rpm
+	//myMotor->setSpeed(150); // 10 rpm
 }
 
 long Spectrometer::getStepToRealRatio()
@@ -87,7 +87,15 @@ void Spectrometer::moveTo(long wavelength)
 			break;
 #endif
 
-		myMotor->step(1, dir, SINGLE);
+		//myMotor->step(1, dir, SINGLE);
+		if(dir == FORWARD)
+			digitalWrite(DIRECTION_PIN, HIGH);
+		else
+			digitalWrite(DIRECTION_PIN, LOW);
+		digitalWrite(STEP_PIN, HIGH);
+		delay(5);
+		digitalWrite(STEP_PIN, LOW);
+		delay(5);
 	}
 
 	currentWavelengthInSteps = newWavelengthInSteps;
