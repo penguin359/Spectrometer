@@ -1,12 +1,6 @@
 #include "Spectrometer.h"
 
 
-#define	LOW_LIMIT_SWITCH_PIN	2
-#define HIGH_LIMIT_SWITCH_PIN	3
-#define STEP_PIN		4
-#define DIRECTION_PIN		5
-
-
 Spectrometer::Spectrometer(Adafruit_StepperMotor *newMotor) : currentWavelengthInSteps(0)
 {
 	myMotor = newMotor;
@@ -47,12 +41,9 @@ void Spectrometer::setDisplayedWavelength(long wavelength)
 void Spectrometer::moveTo(long wavelength)
 {
 	long newWavelengthInSteps = wavelength*stepToRealRatio;
-	long diffWavelengthInSteps = currentWavelengthInSteps -
-				     newWavelengthInSteps;
+	long diffWavelengthInSteps = newWavelengthInSteps -
+				     currentWavelengthInSteps;
 	int dir;
-	long i;
-	bool lowLimitHit = false;
-	bool highLimitHit = false;
 
 	if(diffWavelengthInSteps > 0) {
 		//myMotor->step(diffWavelengthInSteps, FORWARD, SINGLE);
@@ -63,33 +54,7 @@ void Spectrometer::moveTo(long wavelength)
 		diffWavelengthInSteps = -diffWavelengthInSteps;
 	}
 
-	for(i = 0; i < diffWavelengthInSteps; i++) {
-		if(digitalRead(LOW_LIMIT_SWITCH_PIN)) {
-			if(!lowLimitHit)
-				Serial.println(F("Low Limit Hit"));
-			lowLimitHit = true;
-		} else if(lowLimitHit) {
-			Serial.println(F("Low Limit Released"));
-			lowLimitHit = false;
-		}
-
-		if(digitalRead(HIGH_LIMIT_SWITCH_PIN)) {
-			if(!highLimitHit)
-				Serial.println(F("High Limit Hit"));
-			highLimitHit = true;
-		} else if(highLimitHit) {
-			Serial.println(F("High Limit Released"));
-			highLimitHit = false;
-		}
-
-#if 1
-		if((dir == BACKWARD && lowLimitHit) || (dir == FORWARD && highLimitHit))
-			break;
-#endif
-
-		myMotor->step(1, dir, SINGLE);
-	}
-
+	myMotor->step(diffWavelengthInSteps, dir, SINGLE);
 	currentWavelengthInSteps = newWavelengthInSteps;
 }
 
