@@ -30,13 +30,13 @@ arduino: TestArduino.o MockArduino.o
 SpectrometerAdapter.o: ../SpectrometerAdapter.cpp Arduino.h ../SpectrometerAdapter.h
 	g++ $(CPPFLAGS) $(CXXFLAGS) -c -Wall -Werror -O2 $< -o $@
 
-Spectrometer.o: Spectrometer.cpp ../SpectrometerAdapter.h Spectrometer.h
+Spectrometer.o: Spectrometer.cpp ../config.h ../SpectrometerAdapter.h ../Spectrometer.h
 	g++ $(CPPFLAGS) $(CXXFLAGS) -c -Wall -Werror -O2 $< -o $@
 
-TestSpectrometer.o: TestSpectrometer.cpp ../SpectrometerAdapter.h Spectrometer.h
+TestSpectrometer.o: TestSpectrometer.cpp ../SpectrometerAdapter.h ../Spectrometer.h
 	g++ $(CPPFLAGS) $(CXXFLAGS) -c -Wall -Werror -O2 $< -o $@
 
-TestSpectrometer.cpp: Spectrometer.h
+TestSpectrometer.cpp: ../Spectrometer.h
 
 test: test.o
 	g++ $(LD_LIBRARIES) -Wall -Werror -O2 $^ -o $@
