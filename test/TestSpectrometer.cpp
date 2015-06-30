@@ -3,6 +3,7 @@
 #include "CppUTest/CommandLineTestRunner.h"
 
 #include "Adafruit_MotorShield.h"
+#include "SpectrometerAdapter.h"
 #include "Spectrometer.h"
 
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
@@ -115,6 +116,38 @@ TEST(MockDocumentation, SimpleScenario)
 {
 	mock().expectOneCall("productionCode");
 	productionCode();
+	mock().checkExpectations();
+}
+
+/* XXX Move inside TEST_GROUP */
+SpectrometerAdapter adapter(stepper);
+
+TEST_GROUP(SpectrometerAdapter)
+{
+	void setup()
+	{
+		AFMS.begin();
+	}
+
+	void teardown()
+	{
+		mock().clear();
+	}
+};
+
+TEST(SpectrometerAdapter, Initialized)
+{
+	SpectrometerAdapter adapter(stepper);
+
+	mock().expectOneCall("setSpeed").onObject(stepper).withParameter("rpm", SpectrometerAdapter::maxSpeed);
+	adapter.begin();
+	mock().checkExpectations();
+}
+
+TEST(SpectrometerAdapter, OneStep)
+{
+	mock().expectOneCall("step").onObject(stepper).withParameter("steps", 1).withParameter("dir", FORWARD).withParameter("style", SINGLE);
+	adapter.step(FORWARD);
 	mock().checkExpectations();
 }
 

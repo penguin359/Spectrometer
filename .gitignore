@@ -1,4 +1,5 @@
 *.o
 *.swp
+/test/arduino
 /test/spec
 /test/test
