@@ -122,9 +122,9 @@ TEST(MockDocumentation, SimpleScenario)
 
 /* XXX Move inside TEST_GROUP */
 enum { LOW_LIMIT_SWITCH_PIN = 2, HIGH_LIMIT_SWITCH_PIN = 5 };
-SpectrometerAdapter adapter(stepper, LOW_LIMIT_SWITCH_PIN, HIGH_LIMIT_SWITCH_PIN);
+SpectrometerAdapter *adapter = new AdafruitSpectrometerAdapter(stepper, LOW_LIMIT_SWITCH_PIN, HIGH_LIMIT_SWITCH_PIN);
 
-TEST_GROUP(SpectrometerAdapter)
+TEST_GROUP(AdafruitSpectrometerAdapter)
 {
 	void setup()
 	{
@@ -138,48 +138,135 @@ TEST_GROUP(SpectrometerAdapter)
 	}
 };
 
-TEST(SpectrometerAdapter, Initialized)
+TEST(AdafruitSpectrometerAdapter, Initialized)
 {
-	SpectrometerAdapter adapter(stepper, 0, 0);
+	AdafruitSpectrometerAdapter adapter(stepper, 0, 0);
 
-	mock().expectOneCall("setSpeed").onObject(stepper).withParameter("rpm", SpectrometerAdapter::maxSpeed);
+	mock().expectOneCall("setSpeed").onObject(stepper).withParameter("rpm", AdafruitSpectrometerAdapter::maxSpeed);
 	adapter.begin();
 	mock().checkExpectations();
 }
 
-TEST(SpectrometerAdapter, OneStep)
+TEST(AdafruitSpectrometerAdapter, OneStep)
 {
 	mock().expectOneCall("step").onObject(stepper).withParameter("steps", 1).withParameter("dir", FORWARD).withParameter("style", SINGLE);
-	adapter.step(FORWARD);
+	adapter->step(FORWARD);
 	mock().checkExpectations();
 }
 
-TEST(SpectrometerAdapter, ReadLowLimitSwitch)
+TEST(AdafruitSpectrometerAdapter, ReadLowLimitSwitch)
 {
-	LONGS_EQUAL(LOW, adapter.lowLimitHit());
+	LONGS_EQUAL(LOW, adapter->lowLimitHit());
 	digitalRead_Set(LOW_LIMIT_SWITCH_PIN, HIGH);
-	LONGS_EQUAL(HIGH, adapter.lowLimitHit());
+	LONGS_EQUAL(HIGH, adapter->lowLimitHit());
 	digitalRead_Set(LOW_LIMIT_SWITCH_PIN, LOW);
-	LONGS_EQUAL(LOW, adapter.lowLimitHit());
+	LONGS_EQUAL(LOW, adapter->lowLimitHit());
 }
 
-TEST(SpectrometerAdapter, ReadHighLimitSwitch)
+TEST(AdafruitSpectrometerAdapter, ReadHighLimitSwitch)
 {
-	LONGS_EQUAL(LOW, adapter.highLimitHit());
+	LONGS_EQUAL(LOW, adapter->highLimitHit());
 	digitalRead_Set(HIGH_LIMIT_SWITCH_PIN, HIGH);
-	LONGS_EQUAL(HIGH, adapter.highLimitHit());
+	LONGS_EQUAL(HIGH, adapter->highLimitHit());
 	digitalRead_Set(HIGH_LIMIT_SWITCH_PIN, LOW);
-	LONGS_EQUAL(LOW, adapter.highLimitHit());
+	LONGS_EQUAL(LOW, adapter->highLimitHit());
 }
 
-TEST(SpectrometerAdapter, InitializesLimitSwitchesAsInput)
+TEST(AdafruitSpectrometerAdapter, InitializesLimitSwitchesAsInput)
 {
 	pinMode(LOW_LIMIT_SWITCH_PIN, OUTPUT);
 	pinMode(HIGH_LIMIT_SWITCH_PIN, OUTPUT);
-	mock().expectOneCall("setSpeed").onObject(stepper).withParameter("rpm", SpectrometerAdapter::maxSpeed);
-	adapter.begin();
+	mock().expectOneCall("setSpeed").onObject(stepper).withParameter("rpm", AdafruitSpectrometerAdapter::maxSpeed);
+	adapter->begin();
 	LONGS_EQUAL(INPUT, pinMode_Get(LOW_LIMIT_SWITCH_PIN));
 	LONGS_EQUAL(INPUT, pinMode_Get(HIGH_LIMIT_SWITCH_PIN));
+}
+
+
+TEST_GROUP(CounterSpectrometerAdapter)
+{
+	enum { LOW_LIMIT = 10, HIGH_LIMIT = 20 };
+
+	CounterSpectrometerAdapter *adapter;
+
+	void setup()
+	{
+		adapter = new CounterSpectrometerAdapter(LOW_LIMIT, HIGH_LIMIT);
+		adapter->begin();
+	}
+
+	void teardown()
+	{
+		delete adapter;
+	}
+};
+
+TEST(CounterSpectrometerAdapter, Initialized)
+{
+	LONGS_EQUAL(LOW_LIMIT, adapter->getPosition());
+}
+
+TEST(CounterSpectrometerAdapter, CanSetPosition)
+{
+	adapter->setPosition(25);
+	LONGS_EQUAL(25, adapter->getPosition());
+	adapter->setPosition(-10);
+	LONGS_EQUAL(-10, adapter->getPosition());
+}
+
+TEST(CounterSpectrometerAdapter, CanStepForward)
+{
+	adapter->setPosition(15);
+	adapter->step(FORWARD);
+	adapter->step(FORWARD);
+	adapter->step(FORWARD);
+	LONGS_EQUAL(18, adapter->getPosition());
+}
+
+TEST(CounterSpectrometerAdapter, CanStepBackwards)
+{
+	adapter->setPosition(15);
+	adapter->step(BACKWARD);
+	adapter->step(BACKWARD);
+	adapter->step(BACKWARD);
+	LONGS_EQUAL(12, adapter->getPosition());
+}
+
+TEST(CounterSpectrometerAdapter, HitsLowLimit)
+{
+	adapter->setPosition(LOW_LIMIT+1);
+	LONGS_EQUAL(LOW, adapter->lowLimitHit());
+	adapter->setPosition(LOW_LIMIT);
+	LONGS_EQUAL(HIGH, adapter->lowLimitHit());
+	adapter->setPosition(LOW_LIMIT-1);
+	LONGS_EQUAL(HIGH, adapter->lowLimitHit());
+}
+
+TEST(CounterSpectrometerAdapter, HitsHighLimit)
+{
+	adapter->setPosition(HIGH_LIMIT-1);
+	LONGS_EQUAL(LOW, adapter->highLimitHit());
+	adapter->setPosition(HIGH_LIMIT);
+	LONGS_EQUAL(HIGH, adapter->highLimitHit());
+	adapter->setPosition(HIGH_LIMIT+1);
+	LONGS_EQUAL(HIGH, adapter->highLimitHit());
+}
+
+TEST(CounterSpectrometerAdapter, CheckOutOfBounds)
+{
+	adapter->setPosition(HIGH_LIMIT-1);
+	LONGS_EQUAL(0, adapter->outOfBounds());
+	adapter->step(FORWARD);
+	LONGS_EQUAL(0, adapter->outOfBounds());
+	adapter->step(FORWARD);
+	LONGS_EQUAL(1, adapter->outOfBounds());
+
+	adapter->setPosition(LOW_LIMIT+1);
+	LONGS_EQUAL(0, adapter->outOfBounds());
+	adapter->step(BACKWARD);
+	LONGS_EQUAL(0, adapter->outOfBounds());
+	adapter->step(BACKWARD);
+	LONGS_EQUAL(1, adapter->outOfBounds());
 }
 
 int main(int ac, char** av)
