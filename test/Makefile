@@ -16,9 +16,18 @@ LD_LIBRARIES = -L$(CPPUTEST_HOME)/lib -lCppUTest -lCppUTestExt
 
 all: test spec arduino
 
+MockArduino.o: MockArduino.c Arduino.h
+	gcc $(CPPFLAGS) $(CFLAGS) -c -Wall -Werror -O2 $< -o $@
+
+TestArduino.o: TestArduino.cpp Arduino.h
+	g++ $(CPPFLAGS) $(CXXFLAGS) -c -Wall -Werror -O2 $< -o $@
+
+arduino: TestArduino.o MockArduino.o
+	g++ $(LD_LIBRARIES) -Wall -Werror -O2 $^ -o $@
+
 #Spectrometer.cpp: Spectrometer.h
 
-SpectrometerAdapter.o: ../SpectrometerAdapter.cpp ../SpectrometerAdapter.h
+SpectrometerAdapter.o: ../SpectrometerAdapter.cpp Arduino.h ../SpectrometerAdapter.h
 	g++ $(CPPFLAGS) $(CXXFLAGS) -c -Wall -Werror -O2 $< -o $@
 
 Spectrometer.o: Spectrometer.cpp ../SpectrometerAdapter.h Spectrometer.h
@@ -32,16 +41,7 @@ TestSpectrometer.cpp: Spectrometer.h
 test: test.o
 	g++ $(LD_LIBRARIES) -Wall -Werror -O2 $^ -o $@
 
-spec: TestSpectrometer.o MockAdafruit_MotorShield.o SpectrometerAdapter.o Spectrometer.o
-	g++ $(LD_LIBRARIES) -Wall -Werror -O2 $^ -o $@
-
-MockArduino.o: MockArduino.c Arduino.h
-	gcc $(CPPFLAGS) $(CFLAGS) -c -Wall -Werror -O2 $< -o $@
-
-TestArduino.o: TestArduino.cpp Arduino.h
-	g++ $(CPPFLAGS) $(CXXFLAGS) -c -Wall -Werror -O2 $< -o $@
-
-arduino: TestArduino.o MockArduino.o
+spec: TestSpectrometer.o MockArduino.o MockAdafruit_MotorShield.o SpectrometerAdapter.o Spectrometer.o
 	g++ $(LD_LIBRARIES) -Wall -Werror -O2 $^ -o $@
 
 .cpp.o:

@@ -2,6 +2,7 @@
 #include "CppUTestExt/MockSupport.h"
 #include "CppUTest/CommandLineTestRunner.h"
 
+#include "Arduino.h"
 #include "Adafruit_MotorShield.h"
 #include "SpectrometerAdapter.h"
 #include "Spectrometer.h"
@@ -120,12 +121,14 @@ TEST(MockDocumentation, SimpleScenario)
 }
 
 /* XXX Move inside TEST_GROUP */
-SpectrometerAdapter adapter(stepper);
+enum { LOW_LIMIT_SWITCH_PIN = 2, HIGH_LIMIT_SWITCH_PIN = 5 };
+SpectrometerAdapter adapter(stepper, LOW_LIMIT_SWITCH_PIN, HIGH_LIMIT_SWITCH_PIN);
 
 TEST_GROUP(SpectrometerAdapter)
 {
 	void setup()
 	{
+		pinInit();
 		AFMS.begin();
 	}
 
@@ -137,7 +140,7 @@ TEST_GROUP(SpectrometerAdapter)
 
 TEST(SpectrometerAdapter, Initialized)
 {
-	SpectrometerAdapter adapter(stepper);
+	SpectrometerAdapter adapter(stepper, 0, 0);
 
 	mock().expectOneCall("setSpeed").onObject(stepper).withParameter("rpm", SpectrometerAdapter::maxSpeed);
 	adapter.begin();
@@ -149,6 +152,34 @@ TEST(SpectrometerAdapter, OneStep)
 	mock().expectOneCall("step").onObject(stepper).withParameter("steps", 1).withParameter("dir", FORWARD).withParameter("style", SINGLE);
 	adapter.step(FORWARD);
 	mock().checkExpectations();
+}
+
+TEST(SpectrometerAdapter, ReadLowLimitSwitch)
+{
+	LONGS_EQUAL(LOW, adapter.lowLimitHit());
+	digitalRead_Set(LOW_LIMIT_SWITCH_PIN, HIGH);
+	LONGS_EQUAL(HIGH, adapter.lowLimitHit());
+	digitalRead_Set(LOW_LIMIT_SWITCH_PIN, LOW);
+	LONGS_EQUAL(LOW, adapter.lowLimitHit());
+}
+
+TEST(SpectrometerAdapter, ReadHighLimitSwitch)
+{
+	LONGS_EQUAL(LOW, adapter.highLimitHit());
+	digitalRead_Set(HIGH_LIMIT_SWITCH_PIN, HIGH);
+	LONGS_EQUAL(HIGH, adapter.highLimitHit());
+	digitalRead_Set(HIGH_LIMIT_SWITCH_PIN, LOW);
+	LONGS_EQUAL(LOW, adapter.highLimitHit());
+}
+
+TEST(SpectrometerAdapter, InitializesLimitSwitchesAsInput)
+{
+	pinMode(LOW_LIMIT_SWITCH_PIN, OUTPUT);
+	pinMode(HIGH_LIMIT_SWITCH_PIN, OUTPUT);
+	mock().expectOneCall("setSpeed").onObject(stepper).withParameter("rpm", SpectrometerAdapter::maxSpeed);
+	adapter.begin();
+	LONGS_EQUAL(INPUT, pinMode_Get(LOW_LIMIT_SWITCH_PIN));
+	LONGS_EQUAL(INPUT, pinMode_Get(HIGH_LIMIT_SWITCH_PIN));
 }
 
 int main(int ac, char** av)
