@@ -2,6 +2,7 @@
 #define _SPECTROMETER_H_
 
 
+#include "SpectrometerAdapter.h"
 #include "Adafruit_MotorShield.h"
 
 
@@ -24,6 +25,7 @@ class Spectrometer {
 
     public:
 	Spectrometer(Adafruit_StepperMotor *newMotor);
+	Spectrometer(SpectrometerAdapter *newAdapter);
 	void begin();
 	long getStepToRealRatio();
 	long getRealWavelength();

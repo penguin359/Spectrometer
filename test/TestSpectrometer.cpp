@@ -269,6 +269,28 @@ TEST(CounterSpectrometerAdapter, CheckOutOfBounds)
 	LONGS_EQUAL(1, adapter->outOfBounds());
 }
 
+TEST_GROUP(SpectrometerWithAdapter)
+{
+	enum { LOW_LIMIT = 10, HIGH_LIMIT = 20 };
+
+	CounterSpectrometerAdapter *adapter;
+	Spectrometer *spectrometer;
+
+	void setup()
+	{
+		AFMS.begin();
+
+		adapter = new CounterSpectrometerAdapter(LOW_LIMIT, HIGH_LIMIT);
+		adapter->begin();
+		spectrometer = new Spectrometer(adapter);
+	}
+
+	void teardown()
+	{
+		delete adapter;
+	}
+};
+
 int main(int ac, char** av)
 {
 	return CommandLineTestRunner::RunAllTests(ac, av);
